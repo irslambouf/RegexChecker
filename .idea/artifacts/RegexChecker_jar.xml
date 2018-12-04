@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="RegexChecker:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/RegexChecker_jar</output-path>
+    <root id="archive" name="RegexChecker.jar">
+      <element id="module-output" name="RegexChecker" />
+    </root>
+  </artifact>
+</component>
