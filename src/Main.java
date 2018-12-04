@@ -36,7 +36,6 @@ public class Main {
             return;
         }
 
-
         FileOutputStream fos;
 
         try {
