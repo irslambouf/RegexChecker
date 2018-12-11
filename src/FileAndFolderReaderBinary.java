@@ -1,8 +1,5 @@
-
-
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class FileAndFolderReaderBinary {
     private final String FILE_OR_FOLDER;
@@ -19,9 +16,12 @@ public class FileAndFolderReaderBinary {
     private byte[] readBuffer = new byte[readBufferSize];
     private byte[] remainder = null;
     private int lastStartIncrease = 0;
+    private boolean skipRemainderSave = false;
 
     private byte newLine = "\n".getBytes()[0];
     private byte carriageReturn = "\r".getBytes()[0];
+
+    private String oldLine;
 
     public FileAndFolderReaderBinary(String fileOrFolder) {
         FILE_OR_FOLDER = fileOrFolder;
@@ -35,7 +35,8 @@ public class FileAndFolderReaderBinary {
             isDirectory = fileOrFolder.isDirectory();
 
             if (isDirectory) {
-                fileList = fileOrFolder.listFiles();
+                Stream<File> fileStream = Stream.of(fileOrFolder.listFiles());
+                fileList = fileStream.filter(p -> !p.getName().contains("fileStats.txt")).toArray(File[]::new);
             } else {
                 fileList = new File[]{fileOrFolder};
             }
@@ -77,6 +78,7 @@ public class FileAndFolderReaderBinary {
 
     private byte[] getByteline() {
         while ((end = findEndOfLine()) == -1) {
+
             // We have reached end of file need to change FileInputStream to next file
             if (readToBuffer() <= 0) {
                 break;
@@ -120,8 +122,42 @@ public class FileAndFolderReaderBinary {
             lastStartIncrease = 1;
         }
 
-        // Empty line read next one
-        if (returnBytes.length == 1 && returnBytes[0] == newLine){
+        // Empty line go to next non empty line
+        if (returnBytes.length == 1 && returnBytes[0] == newLine) {
+
+            // We have multiple empty lines skip to non-empty line
+            if (start >= readBuffer.length || readBuffer[start] == newLine || readBuffer[start] == carriageReturn) {
+
+                int possibleNewStart;
+                skipRemainderSave = true;
+                // Read from buffer until we find the first non-newline character
+                while ((possibleNewStart = findFirstNotEndOfLine()) == -1) {
+
+                    // We have reached end of file need to change FileInputStream to next file
+                    if (readToBuffer() <= 0) {
+                        break;
+                    }
+                }
+                skipRemainderSave = false;
+
+                // Setup new FileInputStream
+                if (possibleNewStart == -1) {
+                    start = 0;
+                    readBuffer = new byte[DEFAULT_BUFFER_SIZE];
+                    fileInputStream = getFileInputStream();
+
+                    if (fileInputStream == null) {
+                        return null;
+                    }
+
+                    return getByteline();
+                } else {
+                    start = possibleNewStart;
+
+                    return getByteline();
+                }
+            }
+
             return getByteline();
         }
 
@@ -136,6 +172,16 @@ public class FileAndFolderReaderBinary {
         }
 
         // Didn't find end /r or /n in readBuffer
+        return -1;
+    }
+
+    private int findFirstNotEndOfLine() {
+        for (int i = start; i < readBufferSize; i++) {
+            if (readBuffer[i] != carriageReturn && readBuffer[i] != newLine) {
+                return i;
+            }
+        }
+
         return -1;
     }
 
@@ -157,13 +203,15 @@ public class FileAndFolderReaderBinary {
                 } else {
                     // We need to read more data
                     if (readBufferSize - start > 0) {
-                        remainder = new byte[readBufferSize - start];
-                        System.arraycopy(readBuffer, start, remainder, 0, readBufferSize - start);
+                        if (!skipRemainderSave) {
+                            remainder = new byte[readBufferSize - start];
+                            System.arraycopy(readBuffer, start, remainder, 0, readBufferSize - start);
+                        }
                         start = 0;
                     } else {
                         if (readBufferSize - start < 0 && lastStartIncrease == 2) {
                             start = 1;
-                        }else{
+                        } else {
                             start = 0;
                         }
                     }
@@ -183,10 +231,9 @@ public class FileAndFolderReaderBinary {
         return count;
     }
 
-    public String getCurrentFileName() {
+    public String getCurrentFile() {
         return fileList[fileListIndex - 1].toString();
     }
 
 }
-
 
