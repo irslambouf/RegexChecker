@@ -1,11 +1,15 @@
 import java.io.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+//import java.util.regex.Matcher;
+//import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import com.google.re2j.Pattern;
+import com.google.re2j.Matcher;
 
 public class Main {
 
     public static void main(String[] args) {
+        long start = System.nanoTime();
+
         if (args.length < 4) {
             System.out.println("Please provide two arguments");
             System.out.println("USAGE: regexchecker.exe [regex] [flag] [in:filename] [out:filename]");
@@ -18,6 +22,7 @@ public class Main {
             System.err.println("Pattern failed to compile, exiting...");
             return;
         }
+
         int flag;
         try {
             flag = Integer.parseInt(args[1]);
@@ -31,7 +36,6 @@ public class Main {
         }
 
         FileOutputStream fos;
-
         try {
             fos = new FileOutputStream(args[3]);
         } catch (FileNotFoundException e) {
@@ -61,11 +65,12 @@ public class Main {
                 }
             }
 
+            if (count % 100000 == 0) {
+                System.out.println("Processed: " + count + " lines");
+            }
         }
 
-        if (count % 10000 == 0) {
-            System.out.println("Processed: " + count + " lines");
-        }
+        System.out.println(System.nanoTime() - start);
     }
 }
 
