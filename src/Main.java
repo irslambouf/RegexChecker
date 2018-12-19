@@ -18,19 +18,13 @@ public class Main {
             System.err.println("Pattern failed to compile, exiting...");
             return;
         }
-
-        boolean matches = true;
+        int flag;
         try {
-            int flag = Integer.parseInt(args[1]);
+            flag = Integer.parseInt(args[1]);
 
             if (flag < 0 || flag > 1) {
                 throw new NumberFormatException();
             }
-
-            if (flag == 1) {
-                matches = false;
-            }
-
         } catch (NumberFormatException e) {
             System.err.println("Failed to provide valid flag, values are: 0 (matches) or 1 (does not match)... exiting");
             return;
@@ -55,33 +49,23 @@ public class Main {
             count++;
             Matcher m = p.matcher(sLine);
 
-            if (matches) {
-                if (m.matches()) {
-                    try {
-                        fos.write(line);
-                        fos.flush();
-                    } catch (IOException e) {
-                        System.err.println("Failed to write line to file");
-                        System.err.println(sLine);
-                    }
-                }
-            } else {
-                if (!m.matches()) {
-                    try {
-                        System.out.println(sLine);
-                        fos.write(line);
-                        fos.flush();
-                    } catch (IOException e) {
-                        System.err.println("Failed to write line to file");
-                        System.err.println(sLine);
-                    }
+            boolean condition = (flag == 0) == m.matches();
+
+            if (condition) {
+                try {
+                    fos.write(line);
+                    fos.flush();
+                } catch (IOException e) {
+                    System.err.println("Failed to write line to file");
+                    System.err.println(sLine);
                 }
             }
 
-            if (count % 10000 == 0) {
-                System.out.println("Processed: " + count + " lines");
-            }
         }
 
+        if (count % 10000 == 0) {
+            System.out.println("Processed: " + count + " lines");
+        }
     }
 }
+
