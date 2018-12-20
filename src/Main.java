@@ -1,9 +1,7 @@
 import java.io.*;
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import com.google.re2j.Pattern;
-import com.google.re2j.Matcher;
 
 public class Main {
 
@@ -65,7 +63,7 @@ public class Main {
                 }
             }
 
-            if (count % 100000 == 0) {
+            if (count % 1000000 == 0) {
                 System.out.println("Processed: " + count + " lines");
             }
         }
